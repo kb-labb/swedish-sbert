@@ -27,12 +27,14 @@ for category, group in df.groupby("category_id"):
 
 
 df_pred = pd.concat(df_list)[["category_id", "source", "question", "correct_answer", "prediction"]]
-sum(df_pred["correct_answer"] == df_pred["prediction"]) / len(df_pred)
 
 # Accuracy per source (Försäkringskassan, Skatteverket, etc...)
 for source, group in df_pred.groupby("source"):
     accuracy = sum(group["correct_answer"] == group["prediction"]) / len(group)
     print(f"{source}: {accuracy}")
+
+# Total accuracy
+print(f"Total accuracy: {sum(df_pred['correct_answer'] == df_pred['prediction']) / len(df_pred)}")
 
 
 group_lengths = []

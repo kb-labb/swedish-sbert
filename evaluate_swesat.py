@@ -50,4 +50,4 @@ df_correct_labels = df[df["label"] != 0]  # There are some labels == 2 (see data
 correct_predictions = (df_correct_labels["label"] != 0) & (df_correct_labels["pred"] == 1)
 accuracy = sum(correct_predictions) / len(df_correct_labels)
 
-print(f"SweSAT accuracy: {accuracy:.3f}")
+print(f"SweSAT accuracy: {accuracy:.4f}")
