@@ -2,6 +2,8 @@
 
 Swedish sentence BERT (KB-SBERT) was trained to emulate a strong English sentence embedding model called [paraphrase-mpnet-base-v2](https://www.sbert.net/docs/pretrained_models.html#sentence-embedding-models). The model achieved a Pearson correlation coefficient of 0.918 and a Spearman's rank correlation coefficient of 0.911 on the SweParaphrase test set. 
 
+An article explaining the data and the model in further detail can be found on the [KBLab blog](https://kb-labb.github.io/posts/2021-08-23-a-swedish-sentence-transformer/).
+
 ### Training 
 
 We trained on 14.6 million sentences from different parallel corpus sources. Model was trained for 50 hours on a single A100 GPU with 40GB memory. 
@@ -32,3 +34,5 @@ Download the data for evaluation here: https://spraakbanken.gu.se/en/resources/s
 ### Acknowledgements
 
 Big thanks to the [`sentence-transformers`](https://www.sbert.net/) package. Code was adapted and modified from their [training examples](https://github.com/UKPLab/sentence-transformers/tree/master/examples/training/multilingual).
+
+We gratefully acknowledge the HPC RIVR consortium ([www.hpc-rivr.si](www.hpc-rivr.si)) and EuroHPC JU ([eurohpc-ju.europa.eu](eurohpc-ju.europa.eu)) for funding this research by providing computing resources of the HPC system Vega at the Institute of Information Science ([www.izum.si](www.izum.si)).
