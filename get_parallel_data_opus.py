@@ -21,21 +21,12 @@ This python code automates the download and creation of the parallel sentences f
 from opustools import OpusRead
 import os
 
-corpora = ["JW300", "Europarl", "OpenSubtitles", "EMEA", "EUbookshop"]  # Corpora you want to use
+corpora = ["JW300", "Europarl", "OpenSubtitles", "EMEA"]  # Corpora you want to use
 source_languages = ["en"]  # Source language, our teacher model is able to understand
 target_languages = ["sv"]  # Target languages, out student model should learn
 
 output_folder = "parallel-sentences"
 opus_download_folder = "./opus"
-
-# Download EUbookshop manually because data is corrupt when dl via Opus package
-os.makedirs("EUbookshop", exist_ok=True)
-
-if not os.path.exists("EUbookshop/en-sv.txt.zip"):
-    os.system(
-        "wget -O EUbookshop/en-sv.txt.zip https://opus.nlpl.eu/download.php?f=EUbookshop/v2/moses/en-sv.txt.zip"
-    )
-    os.system("unzip EUbookshop/en-sv.txt.zip -d EUbookshop2/")
 
 # Iterator over all corpora / source languages / target languages combinations and download files
 os.makedirs(output_folder, exist_ok=True)
@@ -54,13 +45,7 @@ for corpus in corpora:
                 threshold = None
                 alignment_file = -1
 
-                if corpus == "EUbookshop":
-                    preprocess = "xml"
-                    # alignment_file = "EUbookshop/EUbookshop.en-sv.ids"
-                    attribute = "certainty"
-                    threshold = 0.6
-
-                elif corpus == "OpenSubtitles":
+                if corpus == "OpenSubtitles":
                     attribute = "overlap"
                     threshold = 0.4
 
