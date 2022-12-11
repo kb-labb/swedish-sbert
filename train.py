@@ -32,16 +32,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-teacher_model_name = "paraphrase-mpnet-base-v2"  # Our monolingual teacher model, we want to convert to multiple languages
+teacher_model_name = "all-mpnet-base-v2"  # Our monolingual teacher model, we want to convert to multiple languages
 student_model_name = (
     "KB/bert-base-swedish-cased"  # Multilingual base model we use to imitate the teacher model
 )
 
-max_seq_length = 256  # Student model max. lengths for inputs (number of word pieces)
+max_seq_length = 384  # Student model max. lengths for inputs (number of word pieces)
 train_batch_size = 64  # Batch size for training
 inference_batch_size = 64  # Batch size at inference
-max_sentences_per_language = 4000000  # Max number of parallel sentences (per datafile) for train
-train_max_sentence_length = 600  # Maximum length (characters) for parallel training sentences
+max_sentences_per_language = 5000000  # Max number of parallel sentences (per datafile) for train
+train_max_sentence_length = 2700 # Maximum length (characters) for parallel training sentences
 
 num_epochs = 7  # Train for x epochs
 num_warmup_steps = 10000  # Warumup steps
@@ -66,13 +66,16 @@ parallel_sentences_folder = "parallel-sentences/"
 # Create parallel files for the selected language combinations
 os.makedirs(parallel_sentences_folder, exist_ok=True)
 train_files = [
-    "parallel-sentences/JW300-en-sv.tsv.gz",
-    "parallel-sentences/Europarl-en-sv.tsv.gz",
-    "parallel-sentences/EUbookshop-en-sv.tsv.gz",
-    "parallel-sentences/EMEA-en-sv.tsv.gz",
+    "parallel-sentences/ccs_synthetic.tsv.gz",
     "parallel-sentences/TED2020-en-sv-train.tsv.gz",
     "parallel-sentences/Tatoeba-eng-swe-train.tsv.gz",
     "parallel-sentences/OpenSubtitles-en-sv.tsv.gz",
+    "parallel-sentences/paragraphs-en-sv.tsv.gz",
+    "parallel-sentences/JW300-en-sv.tsv.gz",
+    "parallel-sentences/DGT-TM-en-sv.tsv",
+    "parallel-sentences/ELITR-ECA-en-sv.tsv.gz",
+    "parallel-sentences/EMEA-en-sv.tsv.gz",
+    "parallel-sentences/Europarl-en-sv.tsv.gz",
 ]
 dev_files = [
     "parallel-sentences/TED2020-en-sv-dev.tsv.gz",
@@ -83,13 +86,13 @@ logger.info("Load teacher model")
 teacher_model = SentenceTransformer(teacher_model_name)
 
 
-logger.info("Create student model from scratch")
-word_embedding_model = models.Transformer(student_model_name, max_seq_length=max_seq_length)
-# Apply mean pooling to get one fixed sized sentence vector
-pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension())
-student_model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
-# logger.info("Resume student model training")
-# student_model = SentenceTransformer("output/make-multilingual-en-sv-2021-07-31_23-49-29")
+# logger.info("Create student model from scratch")
+# word_embedding_model = models.Transformer(student_model_name, max_seq_length=max_seq_length)
+# # Apply mean pooling to get one fixed sized sentence vector
+# pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension())
+# student_model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+logger.info("Resume student model training")
+student_model = SentenceTransformer("output/make-multilingual-en-sv-2022-12-10_20-29-16")
 
 
 ###### Read Parallel Sentences Dataset ######
@@ -155,5 +158,5 @@ student_model.fit(
     evaluation_steps=num_evaluation_steps,
     output_path=output_path,
     save_best_model=True,
-    optimizer_params={"lr": 2e-5, "eps": 1e-6, "correct_bias": False},
+    optimizer_params={"lr": 5e-5, "eps": 1e-6},
 )
