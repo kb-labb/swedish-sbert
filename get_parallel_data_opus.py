@@ -21,7 +21,16 @@ This python code automates the download and creation of the parallel sentences f
 from opustools import OpusRead
 import os
 
-corpora = ["JW300", "Europarl", "OpenSubtitles", "EMEA"]  # Corpora you want to use
+# JW300 has been removed from OPUS, download manually instead (See README.md)
+corpora = [
+    # "CCAligned",
+    "ELITR-ECA",
+    # "JW300",
+    "Europarl",
+    "OpenSubtitles",
+    "EMEA",
+    # "DGT",
+]  # Corpora you want to use
 source_languages = ["en"]  # Source language, our teacher model is able to understand
 target_languages = ["sv"]  # Target languages, out student model should learn
 
@@ -47,11 +56,19 @@ for corpus in corpora:
 
                 if corpus == "OpenSubtitles":
                     attribute = "overlap"
-                    threshold = 0.4
+                    threshold = 0.75
 
-                elif corpus == "JW300" or corpus == "EMEA":
+                elif corpus in ["JW300", "EMEA"]:
                     attribute = "certainty"
                     threshold = 0.6
+
+                elif corpus == "ELITR-ECA":
+                    attribute = "score"
+                    threshold = 0.25
+
+                # elif corpus == "CCAligned":
+                #     attribute = "score"
+                #     threshold = 1.25
 
                 try:
                     read = OpusRead(
@@ -61,7 +78,7 @@ for corpus in corpora:
                         write=[output_filename],
                         download_dir=opus_download_folder,
                         preprocess=preprocess,
-                        leave_non_alignments_out=True,
+                        leave_non_alignments_out=False,
                         attribute=attribute,
                         threshold=threshold,
                         write_mode="moses",
@@ -72,4 +89,3 @@ for corpus in corpora:
                 except Exception as e:
                     print("An error occured during the creation of", output_filename)
                     print("type error: " + str(e))
-
