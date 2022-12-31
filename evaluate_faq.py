@@ -4,20 +4,20 @@ import numpy as np
 
 model = SentenceTransformer("KBLab/sentence-bert-swedish-cased")
 
-df = pd.read_csv("faq_mismatched.tsv", sep="\t")
+df = pd.read_csv("faq_dev.tsv", sep="\t")
 
 df_list = []
 for category, group in df.groupby("category_id"):
     question_embeddings = model.encode(group["question"].tolist(), normalize_embeddings=True)
     candidate_embeddings = model.encode(
-        group["candidate_answer"].tolist(), normalize_embeddings=True
+        group["correct_answer"].tolist(), normalize_embeddings=True
     )
 
     similarities = question_embeddings @ candidate_embeddings.T
 
     # Choose candidate answer with highest similarity to given question as prediction
     group["prediction"] = (
-        group["candidate_answer"]
+        group["correct_answer"]
         .reset_index(drop=True)
         .reindex(np.argmax(similarities, axis=1).tolist())
         .tolist()
