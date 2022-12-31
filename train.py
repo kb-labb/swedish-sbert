@@ -17,6 +17,7 @@ import logging
 import sentence_transformers.util
 import gzip
 import numpy as np
+import torch.nn as nn
 
 from sentence_transformers import SentenceTransformer, LoggingHandler, models, evaluation, losses
 from torch.utils.data import DataLoader
@@ -40,20 +41,20 @@ student_model_name = (
 max_seq_length = 384  # Student model max. lengths for inputs (number of word pieces)
 train_batch_size = 64  # Batch size for training
 inference_batch_size = 64  # Batch size at inference
-max_sentences_per_language = 5000000  # Max number of parallel sentences (per datafile) for train
-train_max_sentence_length = 2700 # Maximum length (characters) for parallel training sentences
+max_sentences_per_language = 3000000  # Max number of parallel sentences (per datafile) for train
+train_max_sentence_length = 2600 # Maximum length (characters) for parallel training sentences
 
-num_epochs = 7  # Train for x epochs
-num_warmup_steps = 10000  # Warumup steps
+num_epochs = 2  # Train for x epochs
+num_warmup_steps = 5000  # Warumup steps
 
 num_evaluation_steps = 1000  # Evaluate performance after every xxxx steps
-dev_sentences = 700  # Number of parallel sentences to be used for development
+dev_sentences = 1500  # Number of parallel sentences to be used for development
 
 
 source_languages = set(["en"])  # Our teacher model accepts English (en) sentences
 target_languages = set(["sv"])  # We want to extend the model to Swedish.
 output_path = (
-    "output/make-multilingual-"
+    "output/no-normalize-"
     + "-".join(sorted(list(source_languages)) + sorted(list(target_languages)))
     + "-"
     + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -69,12 +70,12 @@ train_files = [
     "parallel-sentences/ccs_synthetic.tsv.gz",
     "parallel-sentences/TED2020-en-sv-train.tsv.gz",
     "parallel-sentences/Tatoeba-eng-swe-train.tsv.gz",
-    "parallel-sentences/OpenSubtitles-en-sv.tsv.gz",
+    # "parallel-sentences/OpenSubtitles-en-sv.tsv.gz",
     "parallel-sentences/paragraphs-en-sv.tsv.gz",
-    "parallel-sentences/JW300-en-sv.tsv.gz",
-    "parallel-sentences/DGT-TM-en-sv.tsv",
-    "parallel-sentences/ELITR-ECA-en-sv.tsv.gz",
-    "parallel-sentences/EMEA-en-sv.tsv.gz",
+    # "parallel-sentences/JW300-en-sv.tsv.gz",
+    # "parallel-sentences/DGT-TM-en-sv.tsv",
+    # "parallel-sentences/ELITR-ECA-en-sv.tsv.gz",
+    # "parallel-sentences/EMEA-en-sv.tsv.gz",
     "parallel-sentences/Europarl-en-sv.tsv.gz",
 ]
 dev_files = [
@@ -83,16 +84,26 @@ dev_files = [
 ]
 
 logger.info("Load teacher model")
+
+# Remove l2 normalization layer from all-mpnet-base-v2
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+        
+    def forward(self, x):
+        return x
+
 teacher_model = SentenceTransformer(teacher_model_name)
+teacher_model[2] = Identity()
 
+logger.info("Create student model from scratch")
+word_embedding_model = models.Transformer(student_model_name, max_seq_length=max_seq_length)
+# Apply mean pooling to get one fixed sized sentence vector
+pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension())
+student_model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
-# logger.info("Create student model from scratch")
-# word_embedding_model = models.Transformer(student_model_name, max_seq_length=max_seq_length)
-# # Apply mean pooling to get one fixed sized sentence vector
-# pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension())
-# student_model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
-logger.info("Resume student model training")
-student_model = SentenceTransformer("output/make-multilingual-en-sv-2022-12-10_20-29-16")
+# logger.info("Resume student model training")
+# student_model = SentenceTransformer("output/original-en-sv-2022-12-20_16-52-40")
 
 
 ###### Read Parallel Sentences Dataset ######
@@ -158,5 +169,5 @@ student_model.fit(
     evaluation_steps=num_evaluation_steps,
     output_path=output_path,
     save_best_model=True,
-    optimizer_params={"lr": 5e-5, "eps": 1e-6},
+    optimizer_params={"lr": 8e-6, "eps": 1e-6},
 )
